@@ -5,7 +5,7 @@ import { Geolocation } from '@capacitor/geolocation';
 import { useToastStore } from '../../stores/toastStore';
 import { MapPin, AlertCircle } from 'lucide-react';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoicmlkZWh1YmFwcCIsImEiOiJjbGFiY2RlZjAxMjM0M3FxdGV4YW01em01In0.9c5wKUJGiDsFeGKP31TD9w';
+mapboxgl.accessToken = 'pk.eyJ1IjoiZmVkb3NlZXZzbSIsImEiOiJjbTl6czltNzcwbmd4MmlzZDNhaGR5NWdoIn0.Xqp592659X06xHAJLbcrAQ';
 
 interface MapProps {
   onLocationSelect?: (longitude: number, latitude: number) => void;

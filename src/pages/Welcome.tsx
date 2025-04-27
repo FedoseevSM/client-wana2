@@ -1,81 +1,77 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Car } from 'lucide-react';
+import { Car, ChevronRight } from 'lucide-react';
 import Button from '../components/ui/Button';
 
 const Welcome = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12 text-center">
+    <div className="min-h-screen bg-primary-500">
+      <div className="h-[45vh] relative overflow-hidden">
+        <img
+          src="https://images.pexels.com/photos/13861/IMG_3496bfree.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+          alt="City streets"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 to-primary-500" />
+      </div>
+
+      <div className="relative -mt-6 bg-white dark:bg-gray-900 min-h-[60vh] rounded-t-[2.5rem] px-6 pt-8 pb-safe-bottom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8"
+          className="space-y-6"
         >
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-primary-500 text-white rounded-full">
-            <Car size={40} />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="bg-primary-500 rounded-full p-3">
+                <Car className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold">RideHub</h1>
+            </div>
+            <span className="text-sm text-gray-500">v0.1.0</span>
           </div>
-        </motion.div>
-        
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="text-4xl font-bold mb-4 text-gray-900 dark:text-white"
-        >
-          Welcome to RideHub
-        </motion.h1>
-        
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="text-lg text-gray-600 dark:text-gray-300 mb-8 max-w-md"
-        >
-          The smart way to get around. Reliable rides, competitive prices, and a seamless experience.
-        </motion.p>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="flex flex-col w-full max-w-md space-y-4"
-        >
-          <Button 
-            onClick={() => navigate('/login')} 
-            variant="primary" 
-            fullWidth
-            size="lg"
-          >
-            Sign In
-          </Button>
-          
-          <Button 
-            onClick={() => navigate('/register')} 
-            variant="outline" 
-            fullWidth
-            size="lg"
-          >
-            Create Account
-          </Button>
+
+          <div className="space-y-4">
+            <h2 className="text-3xl font-bold">Your ride, your price</h2>
+            <p className="text-gray-600 dark:text-gray-300">
+              Name your price and find nearby drivers. Get the best deal for your journey.
+            </p>
+          </div>
+
+          <div className="space-y-4 pt-6">
+            <Button
+              onClick={() => navigate('/register')}
+              variant="primary"
+              fullWidth
+              size="lg"
+              icon={<ChevronRight />}
+              iconPosition="right"
+            >
+              Create Account
+            </Button>
+
+            <Button
+              onClick={() => navigate('/login')}
+              variant="outline"
+              fullWidth
+              size="lg"
+            >
+              Sign In
+            </Button>
+          </div>
+
+          <p className="text-sm text-center text-gray-500 dark:text-gray-400 pt-4">
+            By continuing, you agree to our Terms of Service and Privacy Policy
+          </p>
         </motion.div>
       </div>
-      
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.8 }}
-        className="px-4 py-6 text-center text-gray-500 dark:text-gray-400 text-sm"
-      >
-        By continuing, you agree to our Terms of Service and Privacy Policy.
-      </motion.div>
     </div>
   );
 };
 
 export default Welcome;
 
-export { Welcome }
+export { Welcome };

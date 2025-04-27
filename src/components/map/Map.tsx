@@ -1,14 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import MapboxGeocoder from '@mapbox/mapbox-gl-geocoder';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { useToastStore } from '../../stores/toastStore';
-import { MapPin, AlertCircle } from 'lucide-react';
+import { MapPin, AlertCircle, Crosshair, Palette } from 'lucide-react';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZmVkb3NlZXZzbSIsImEiOiJjbTl6czltNzcwbmd4MmlzZDNhaGR5NWdoIn0.Xqp592659X06xHAJLbcrAQ';
 
+const mapStyles = [
+  { id: 'light', name: 'Light', url: 'mapbox://styles/mapbox/light-v11' },
+  { id: 'dark', name: 'Dark', url: 'mapbox://styles/mapbox/dark-v11' },
+  { id: 'streets', name: 'Streets', url: 'mapbox://styles/mapbox/streets-v12' },
+  { id: 'satellite', name: 'Satellite', url: 'mapbox://styles/mapbox/satellite-streets-v12' },
+  { id: 'navigation', name: 'Navigation', url: 'mapbox://styles/mapbox/navigation-night-v1' }
+];
+
 interface MapProps {
-  onLocationSelect?: (longitude: number, latitude: number) => void;
+  onLocationSelect?: (longitude: number, latitude: number, address?: string) => void;
 }
 
 const Map = ({ onLocationSelect }: MapProps) => {
@@ -18,43 +27,85 @@ const Map = ({ onLocationSelect }: MapProps) => {
   const [lng, setLng] = useState(-74.006);
   const [lat, setLat] = useState(40.7128);
   const [zoom, setZoom] = useState(12);
+  const [showStyles, setShowStyles] = useState(false);
+  const [currentStyle, setCurrentStyle] = useState(mapStyles[2]);
   const { addToast } = useToastStore();
 
-  useEffect(() => {
-    const getUserLocation = async () => {
-      try {
-        if (Capacitor.isPluginAvailable('Geolocation')) {
-          const position = await Geolocation.getCurrentPosition();
-          setLng(position.coords.longitude);
-          setLat(position.coords.latitude);
-        } else {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              setLng(position.coords.longitude);
-              setLat(position.coords.latitude);
-            },
-            () => {
-              addToast({
-                title: 'Location Error',
-                message: 'Unable to retrieve your location',
-                type: 'error',
-                icon: <AlertCircle size={20} />,
-              });
-            }
-          );
-        }
-      } catch (error) {
-        addToast({
-          title: 'Location Error',
-          message: 'Unable to retrieve your location',
-          type: 'error',
-          icon: <AlertCircle size={20} />,
-        });
-      }
-    };
+  const handleLocationFound = async (longitude: number, latitude: number) => {
+    setLng(longitude);
+    setLat(latitude);
 
-    getUserLocation();
-  }, [addToast]);
+    if (marker.current) {
+      marker.current.setLngLat([longitude, latitude]);
+    }
+
+    if (map.current) {
+      map.current.flyTo({
+        center: [longitude, latitude],
+        zoom: 15,
+        essential: true,
+      });
+    }
+
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}`
+      );
+      const data = await response.json();
+      const address = data.features[0]?.place_name;
+      
+      if (onLocationSelect) {
+        onLocationSelect(longitude, latitude, address);
+      }
+    } catch (error) {
+      console.error('Error reverse geocoding:', error);
+      if (onLocationSelect) {
+        onLocationSelect(longitude, latitude);
+      }
+    }
+  };
+
+  const getCurrentLocation = async () => {
+    try {
+      if (Capacitor.isPluginAvailable('Geolocation')) {
+        const position = await Geolocation.getCurrentPosition();
+        handleLocationFound(position.coords.longitude, position.coords.latitude);
+      } else {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            handleLocationFound(position.coords.longitude, position.coords.latitude);
+          },
+          () => {
+            addToast({
+              title: 'Location Error',
+              message: 'Unable to retrieve your location',
+              type: 'error',
+              icon: <AlertCircle size={20} />,
+            });
+          }
+        );
+      }
+    } catch (error) {
+      addToast({
+        title: 'Location Error',
+        message: 'Unable to retrieve your location',
+        type: 'error',
+        icon: <AlertCircle size={20} />,
+      });
+    }
+  };
+
+  const changeMapStyle = (style: typeof mapStyles[0]) => {
+    if (map.current) {
+      map.current.setStyle(style.url);
+      setCurrentStyle(style);
+      setShowStyles(false);
+    }
+  };
+
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
 
   useEffect(() => {
     if (map.current) return;
@@ -62,13 +113,25 @@ const Map = ({ onLocationSelect }: MapProps) => {
     if (mapContainer.current) {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
+        style: currentStyle.url,
         center: [lng, lat],
         zoom: zoom,
         attributionControl: false,
       });
 
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      const geocoder = new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        mapboxgl: mapboxgl,
+        marker: false,
+        placeholder: 'Search for a location',
+      });
+
+      geocoder.on('result', (e) => {
+        const [longitude, latitude] = e.result.center;
+        handleLocationFound(longitude, latitude);
+      });
 
       marker.current = new mapboxgl.Marker({
         color: '#0066FF',
@@ -88,28 +151,15 @@ const Map = ({ onLocationSelect }: MapProps) => {
       map.current.on('click', (e) => {
         if (marker.current) {
           marker.current.setLngLat(e.lngLat);
-          if (onLocationSelect) {
-            onLocationSelect(e.lngLat.lng, e.lngLat.lat);
-          }
+          handleLocationFound(e.lngLat.lng, e.lngLat.lat);
         }
       });
 
       marker.current.on('dragend', () => {
-        if (marker.current && onLocationSelect) {
+        if (marker.current) {
           const lngLat = marker.current.getLngLat();
-          onLocationSelect(lngLat.lng, lngLat.lat);
+          handleLocationFound(lngLat.lng, lngLat.lat);
         }
-      });
-    }
-  }, [lng, lat, zoom, onLocationSelect]);
-
-  useEffect(() => {
-    if (map.current && marker.current) {
-      marker.current.setLngLat([lng, lat]);
-      map.current.flyTo({
-        center: [lng, lat],
-        zoom: zoom,
-        essential: true,
       });
     }
   }, [lng, lat, zoom]);
@@ -117,6 +167,37 @@ const Map = ({ onLocationSelect }: MapProps) => {
   return (
     <div className="relative h-full w-full">
       <div ref={mapContainer} className="map-container" />
+      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+        <button
+          onClick={getCurrentLocation}
+          className="bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+          aria-label="Get current location"
+        >
+          <Crosshair size={20} className="text-primary-500" />
+        </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowStyles(!showStyles)}
+            className="bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+            aria-label="Change map style"
+          >
+            <Palette size={20} className="text-primary-500" />
+          </button>
+          {showStyles && (
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1">
+              {mapStyles.map((style) => (
+                <button
+                  key={style.id}
+                  onClick={() => changeMapStyle(style)}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  {style.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
       <div className="absolute bottom-8 left-0 right-0 flex justify-center pointer-events-none">
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 text-sm flex items-center">
           <MapPin size={16} className="text-primary-500 mr-2" />

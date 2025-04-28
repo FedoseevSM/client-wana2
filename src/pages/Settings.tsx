@@ -127,8 +127,8 @@ const Settings = () => {
           transition={{ duration: 0.3, delay: 0.3 }}
           className="text-center text-sm text-gray-500 dark:text-gray-400 pt-4"
         >
-          <p>RideHub v0.1.0</p>
-          <p className="mt-1">© 2025 RideHub Inc.</p>
+          <p>Wana2 v0.1.0</p>
+          <p className="mt-1">© 2025 Wana2 Inc.</p>
         </motion.div>
       </div>
     </div>

@@ -29,7 +29,7 @@ const Welcome = () => {
               <div className="bg-primary-500 rounded-full p-3">
                 <Car className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold">RideHub</h1>
+              <h1 className="text-2xl font-bold">Wana2</h1>
             </div>
             <span className="text-sm text-gray-500">v0.1.0</span>
           </div>

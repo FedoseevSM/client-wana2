@@ -73,7 +73,7 @@ const RideCard = ({ ride, isActive = false }: RideCardProps) => {
             <CreditCard size={16} className="text-gray-500 dark:text-gray-400 mr-2" />
             <span className="text-sm">{ride.paymentMethod}</span>
           </div>
-          <div className="text-lg font-semibold">${ride.fare.toFixed(2)}</div>
+          <div className="text-lg font-semibold">R{ride.fare.toFixed(2)}</div>
         </div>
       </div>
     </Link>

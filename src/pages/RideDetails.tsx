@@ -96,7 +96,7 @@ const RideDetails = () => {
               >
                 {ride.status.charAt(0).toUpperCase() + ride.status.slice(1)}
               </span>
-              <span className="font-semibold text-lg">${ride.fare.toFixed(2)}</span>
+              <span className="font-semibold text-lg">R{ride.fare.toFixed(2)}</span>
             </div>
             
             <div className="flex flex-col space-y-3 mb-4">

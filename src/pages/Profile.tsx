@@ -69,7 +69,7 @@ const Profile = () => {
             
             <div className="ml-4">
               <h2 className="text-xl font-bold">{user?.name || 'John Doe'}</h2>
-              <p className="text-gray-600 dark:text-gray-400">{user?.email || 'john.doe@example.com'}</p>
+              <p className="text-gray-600 dark:text-gray-400">{user?.phone || '+27 71 234 5678'}</p>
               
               <div className="flex items-center mt-2">
                 <div className="flex items-center text-accent-500">

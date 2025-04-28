@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Clock, Star, Car, X, Crosshair } from 'lucide-react';
+import { Search, MapPin, Clock, Star, Car, X, Crosshair, CreditCard, Wallet } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Map from '../components/map/Map';
+import BurgerMenu from '../components/layout/BurgerMenu';
+import FindDrivers from './FindDrivers';
 
 const Home = () => {
   const [showRideForm, setShowRideForm] = useState(false);
+  const [showFindDrivers, setShowFindDrivers] = useState(false);
   const [pickupLocation, setPickupLocation] = useState('');
   const [dropoffLocation, setDropoffLocation] = useState('');
   const [price, setPrice] = useState('150');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
 
   const handleLocationSelect = (longitude: number, latitude: number, address?: string) => {
     if (address) {
@@ -31,12 +35,21 @@ const Home = () => {
   };
 
   const handleFindDrivers = () => {
-    // Handle find drivers logic here
-    console.log('Finding drivers...');
+    setShowFindDrivers(true);
   };
 
   return (
     <div className="h-screen flex flex-col relative">
+      <div className="absolute top-safe-top left-4 z-10 flex items-center">
+        <BurgerMenu />
+        {/* <div className="ml-3 flex items-center">
+          <div className="bg-white dark:bg-gray-800 rounded-full p-2 shadow-lg">
+            <Car className="w-5 h-5 text-primary-500" />
+          </div>
+          <span className="ml-2 text-lg font-bold text-white">Wana2</span>
+        </div> */}
+      </div>
+      
       <div className="flex-1">
         <Map onLocationSelect={handleLocationSelect} />
       </div>
@@ -48,7 +61,7 @@ const Home = () => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="absolute left-0 right-0 bottom-0 pb-20"
+            className="absolute left-0 bottom-0 right-0"
           >
             <div className="bg-white dark:bg-gray-900 rounded-t-3xl shadow-lg px-4 pt-2 pb-6">
               <div className="w-12 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4" />
@@ -167,7 +180,7 @@ const Home = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center justify-center mb-4">
                     <span className="text-3xl font-bold text-primary-500 mr-2">R</span>
                     <input
                       type="text"
@@ -176,6 +189,31 @@ const Home = () => {
                       className="text-3xl font-bold text-primary-500 bg-transparent border-none focus:outline-none text-center w-32"
                       placeholder="0"
                     />
+                  </div>
+
+                  <div className="flex justify-center space-x-4">
+                    <button
+                      onClick={() => setPaymentMethod('cash')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
+                        paymentMethod === 'cash'
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <Wallet size={18} />
+                      <span>Cash</span>
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('card')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-full ${
+                        paymentMethod === 'card'
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <CreditCard size={18} />
+                      <span>Card</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -193,6 +231,17 @@ const Home = () => {
               </div>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showFindDrivers && (
+          <FindDrivers
+            pickup={pickupLocation}
+            dropoff={dropoffLocation}
+            price={price}
+            onClose={() => setShowFindDrivers(false)}
+          />
         )}
       </AnimatePresence>
     </div>

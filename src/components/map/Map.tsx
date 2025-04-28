@@ -18,18 +18,87 @@ const mapStyles = [
 
 interface MapProps {
   onLocationSelect?: (longitude: number, latitude: number, address?: string) => void;
+  showDriverLocation?: boolean;
 }
 
-const Map = ({ onLocationSelect }: MapProps) => {
+const Map = ({ onLocationSelect, showDriverLocation }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
+  const driverMarker = useRef<mapboxgl.Marker | null>(null);
+  const carMarkers = useRef<mapboxgl.Marker[]>([]);
   const [lng, setLng] = useState(-74.006);
   const [lat, setLat] = useState(40.7128);
   const [zoom, setZoom] = useState(12);
   const [showStyles, setShowStyles] = useState(false);
   const [currentStyle, setCurrentStyle] = useState(mapStyles[2]);
   const { addToast } = useToastStore();
+
+  const createCarMarker = (longitude: number, latitude: number) => {
+    if (!map.current) return null;
+
+    const el = document.createElement('div');
+    el.className = 'car-marker';
+    el.style.width = '24px';
+    el.style.height = '24px';
+    el.style.backgroundImage = 'url(https://img.icons8.com/material-rounded/96/0066FF/car.png)';
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundRepeat = 'no-repeat';
+
+    const marker = new mapboxgl.Marker(el)
+      .setLngLat([longitude, latitude])
+      .addTo(map.current);
+
+    return marker;
+  };
+
+  const animateRandomCars = () => {
+    if (!map.current) return;
+
+    // Clear existing car markers
+    carMarkers.current.forEach(marker => marker.remove());
+    carMarkers.current = [];
+
+    // Create 3-4 random cars around the user's location
+    const numCars = Math.floor(Math.random() * 2) + 3; // Random number between 3-4
+
+    for (let i = 0; i < numCars; i++) {
+      // Random offset from user's location (within ~500m)
+      const offsetLng = (Math.random() - 0.5) * 0.01;
+      const offsetLat = (Math.random() - 0.5) * 0.01;
+      
+      const carMarker = createCarMarker(lng + offsetLng, lat + offsetLat);
+      if (carMarker) {
+        carMarkers.current.push(carMarker);
+
+        // Animate the car
+        let progress = 0;
+        const animateCar = () => {
+          progress += 0.01;
+          if (progress >= 1) {
+            carMarker.remove();
+            carMarkers.current = carMarkers.current.filter(m => m !== carMarker);
+            return;
+          }
+
+          // Move the car in a random direction
+          const newLng = (lng + offsetLng) + Math.sin(progress * Math.PI) * 0.001;
+          const newLat = (lat + offsetLat) + Math.cos(progress * Math.PI) * 0.001;
+          carMarker.setLngLat([newLng, newLat]);
+
+          requestAnimationFrame(animateCar);
+        };
+
+        animateCar();
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Start periodic car animations
+    const carInterval = setInterval(animateRandomCars, 4000);
+    return () => clearInterval(carInterval);
+  }, [lng, lat]);
 
   const handleLocationFound = async (longitude: number, latitude: number) => {
     setLng(longitude);
@@ -52,7 +121,11 @@ const Map = ({ onLocationSelect }: MapProps) => {
         `https://api.mapbox.com/geocoding/v5/mapbox.places/${longitude},${latitude}.json?access_token=${mapboxgl.accessToken}`
       );
       const data = await response.json();
-      const address = data.features[0]?.place_name;
+      
+      // Check if features array exists and has items before accessing
+      const address = data.features && data.features.length > 0 
+        ? data.features[0].place_name 
+        : 'Address not found';
       
       if (onLocationSelect) {
         onLocationSelect(longitude, latitude, address);
@@ -60,7 +133,7 @@ const Map = ({ onLocationSelect }: MapProps) => {
     } catch (error) {
       console.error('Error reverse geocoding:', error);
       if (onLocationSelect) {
-        onLocationSelect(longitude, latitude);
+        onLocationSelect(longitude, latitude, 'Address not found');
       }
     }
   };
@@ -167,6 +240,14 @@ const Map = ({ onLocationSelect }: MapProps) => {
   return (
     <div className="relative h-full w-full">
       <div ref={mapContainer} className="map-container" />
+      <div className="absolute bottom-30 left-0 right-0 flex justify-center pointer-events-none">
+        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 text-sm flex items-center">
+          <MapPin size={16} className="text-primary-500 mr-2" />
+          <span>
+            {lat.toFixed(4)}, {lng.toFixed(4)}
+          </span>
+        </div>
+      </div>
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
         <button
           onClick={getCurrentLocation}
@@ -196,14 +277,6 @@ const Map = ({ onLocationSelect }: MapProps) => {
               ))}
             </div>
           )}
-        </div>
-      </div>
-      <div className="absolute bottom-8 left-0 right-0 flex justify-center pointer-events-none">
-        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-full px-4 py-2 text-sm flex items-center">
-          <MapPin size={16} className="text-primary-500 mr-2" />
-          <span>
-            {lat.toFixed(4)}, {lng.toFixed(4)}
-          </span>
         </div>
       </div>
     </div>

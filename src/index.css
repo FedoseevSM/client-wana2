@@ -54,3 +54,32 @@
     @apply h-full w-full;
   }
 }
+
+/* Phone Input Custom Styles */
+.PhoneInput {
+  @apply flex items-center border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 bg-white dark:bg-gray-800 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition duration-200 ease-in-out;
+}
+
+.PhoneInputCountry {
+  @apply mr-3;
+}
+
+.PhoneInputCountrySelect {
+  @apply opacity-0 absolute;
+}
+
+.PhoneInputCountrySelectArrow {
+  @apply border-t-4 border-gray-400;
+}
+
+.PhoneInputInput {
+  @apply bg-transparent border-none p-0 focus:outline-none text-lg flex-1;
+}
+
+.PhoneInputCountryIcon {
+  @apply w-6 h-4 overflow-hidden rounded;
+}
+
+.PhoneInputCountryIcon--border {
+  @apply border-gray-300 dark:border-gray-700;
+}

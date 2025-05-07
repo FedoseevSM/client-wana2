@@ -12,8 +12,6 @@ export function Register() {
     email: '',
     password: '',
     name: '',
-    phone: '',
-    role: 'rider' as const,
   });
   const { register, isAuthenticated } = useAuthStore();
   const addToast = useToastStore((state) => state.addToast);
@@ -25,7 +23,7 @@ export function Register() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await register(formData);
+      await register(formData.email, formData.password, formData.name);
       addToast({
         title: 'Success',
         message: 'Successfully registered!',
@@ -35,7 +33,7 @@ export function Register() {
     } catch (error) {
       addToast({
         title: 'Error',
-        message: 'Failed to register. Please try again.',
+        message: error instanceof Error ? error.message : 'Failed to register',
         type: 'error'
       });
     }
@@ -78,49 +76,6 @@ export function Register() {
                 setFormData({ ...formData, password: e.target.value })
               }
             />
-            <Input
-              label="Phone Number"
-              type="tel"
-              required
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-            />
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-gray-700">
-                I want to
-              </label>
-              <div className="flex gap-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="rider"
-                    checked={formData.role === 'rider'}
-                    onChange={(e) =>
-                      setFormData({ ...formData, role: e.target.value as 'rider' })
-                    }
-                    className="mr-2"
-                  />
-                  Book rides
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    value="driver"
-                    checked={formData.role === 'driver'}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        role: e.target.value as 'driver',
-                      })
-                    }
-                    className="mr-2"
-                  />
-                  Drive
-                </label>
-              </div>
-            </div>
           </div>
 
           <Button type="submit" className="w-full">

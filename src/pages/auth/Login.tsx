@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Car, ChevronRight } from 'lucide-react';
+import { Car, ChevronRight, Mail, Phone, Key, MessageSquare } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useAuthStore } from '../../stores/authStore';
@@ -8,63 +8,71 @@ import { useToastStore } from '../../stores/toastStore';
 import { motion } from 'framer-motion';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import Logo from '../../../assets/logo.png';
+
+type AuthMethod = 'phone' | 'email';
+type PhoneAuthMethod = 'code' | 'password';
 
 export function Login() {
   const navigate = useNavigate();
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
+  const [phoneAuthMethod, setPhoneAuthMethod] = useState<PhoneAuthMethod>('password');
   const [phoneNumber, setPhoneNumber] = useState('+27');
+  const [phonePassword, setPhonePassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const { login, isAuthenticated } = useAuthStore();
+  const { login, loginWithPhone, isAuthenticated } = useAuthStore();
   const addToast = useToastStore((state) => state.addToast);
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  const handlePhoneSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setIsVerifying(true);
-    addToast({
-      title: 'Code Sent',
-      message: 'Enter any 6-digit code to continue',
-      type: 'info'
-    });
-  };
-
-  const handleVerificationSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+    
     try {
-      // Accept any 6-digit code for testing
-      if (verificationCode.length === 6) {
-        await login({
-          id: '1',
-          name: 'Test User',
-          email: 'test@example.com'
-        });
-        addToast({
-          title: 'Success',
-          message: 'Successfully logged in!',
-          type: 'success'
-        });
-        navigate('/');
+      if (authMethod === 'phone') {
+        if (phoneAuthMethod === 'password') {
+          if (!phoneNumber || !phonePassword) {
+            throw new Error('Please enter both phone number and password');
+          }
+          await loginWithPhone(phoneNumber, phonePassword);
+          addToast({
+            title: 'Success',
+            message: 'Successfully logged in!',
+            type: 'success'
+          });
+          navigate('/');
+        } else {
+          setIsVerifying(true);
+          addToast({
+            title: 'Service Unavailable',
+            message: 'Code verification is currently under maintenance. Please use password authentication instead.',
+            type: 'warning'
+          });
+        }
       } else {
-        throw new Error('Invalid code');
+        if (email && password) {
+          await login(email, password);
+          addToast({
+            title: 'Success',
+            message: 'Successfully logged in!',
+            type: 'success'
+          });
+          navigate('/');
+        } else {
+          throw new Error('Please enter both email and password');
+        }
       }
     } catch (error) {
       addToast({
         title: 'Error',
-        message: 'Please enter a 6-digit code',
+        message: error instanceof Error ? error.message : 'Authentication failed',
         type: 'error'
       });
     }
-  };
-
-  const handleResendCode = () => {
-    addToast({
-      title: 'Code Resent',
-      message: 'Enter any 6-digit code to continue',
-      type: 'info'
-    });
   };
 
   return (
@@ -87,19 +95,58 @@ export function Login() {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-primary-500 rounded-full p-3">
-                <Car className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold">Wana2</h1>
+        <img src={Logo} alt="Logo" className="w-132 h-34" />
             </div>
           </div>
 
-          {!isVerifying ? (
-            <form onSubmit={handlePhoneSubmit} className="space-y-6">
+          <div className="flex space-x-2 mb-6">
+            <Button
+              variant={authMethod === 'phone' ? 'primary' : 'outline'}
+              onClick={() => setAuthMethod('phone')}
+              icon={<Phone size={20} />}
+              fullWidth
+            >
+              Phone
+            </Button>
+            <Button
+              variant={authMethod === 'email' ? 'primary' : 'outline'}
+              onClick={() => setAuthMethod('email')}
+              icon={<Mail size={20} />}
+              fullWidth
+            >
+              Email
+            </Button>
+          </div>
+
+          {authMethod === 'phone' && (
+            <div className="flex space-x-2 mb-6">
+              <Button
+                variant={phoneAuthMethod === 'password' ? 'primary' : 'outline'}
+                onClick={() => setPhoneAuthMethod('password')}
+                icon={<Key size={20} />}
+                fullWidth
+              >
+                Password
+              </Button>
+              <Button
+                variant={phoneAuthMethod === 'code' ? 'primary' : 'outline'}
+                onClick={() => setPhoneAuthMethod('code')}
+                icon={<MessageSquare size={20} />}
+                fullWidth
+              >
+                Code
+              </Button>
+            </div>
+          )}
+
+          {authMethod === 'phone' ? (
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Enter your phone number</h2>
+                <h2 className="text-2xl font-bold">Sign in with phone</h2>
                 <p className="text-gray-600 dark:text-gray-300">
-                  We'll send you a verification code
+                  {phoneAuthMethod === 'password' 
+                    ? 'Enter your phone number and password'
+                    : 'Enter your phone number to receive a verification code'}
                 </p>
                 <div className="PhoneInput-custom">
                   <PhoneInput
@@ -111,6 +158,15 @@ export function Login() {
                     className="text-lg"
                   />
                 </div>
+                {phoneAuthMethod === 'password' && (
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={phonePassword}
+                    onChange={(e) => setPhonePassword(e.target.value)}
+                    required
+                  />
+                )}
               </div>
 
               <Button
@@ -120,44 +176,32 @@ export function Login() {
                 size="lg"
                 icon={<ChevronRight />}
                 iconPosition="right"
-                disabled={!phoneNumber || phoneNumber.length < 8}
+                disabled={phoneAuthMethod === 'password' ? !phoneNumber || !phonePassword : !phoneNumber}
               >
                 Continue
               </Button>
-
-              <p className="text-sm text-center text-gray-500">
-                By continuing, you agree to our Terms of Service and Privacy Policy
-              </p>
             </form>
           ) : (
-            <form onSubmit={handleVerificationSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold">Enter verification code</h2>
+                <h2 className="text-2xl font-bold">Sign in with email</h2>
                 <p className="text-gray-600 dark:text-gray-300">
-                  We sent a code to {phoneNumber}
+                  Enter your email and password
                 </p>
                 <Input
-                  type="text"
-                  placeholder="Enter code"
-                  value={verificationCode}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9]/g, '');
-                    if (value.length <= 6) {
-                      setVerificationCode(value);
-                    }
-                  }}
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
-                  pattern="[0-9]*"
-                  maxLength={6}
-                  className="text-lg text-center tracking-widest"
                 />
-                <button
-                  type="button"
-                  onClick={() => setIsVerifying(false)}
-                  className="text-primary-500 text-sm font-medium"
-                >
-                  Change phone number
-                </button>
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
 
               <Button
@@ -167,20 +211,21 @@ export function Login() {
                 size="lg"
                 icon={<ChevronRight />}
                 iconPosition="right"
-                disabled={verificationCode.length !== 6}
+                disabled={!email || !password}
               >
-                Verify
+                Sign In
               </Button>
 
               <button
                 type="button"
-                onClick={handleResendCode}
-                className="text-primary-500 text-sm font-medium w-full text-center"
+                onClick={() => navigate('/forgot-password')}
+                className="hidden text-primary-500 text-sm font-medium w-full text-center"
               >
-                Resend code
+                Forgot password?
               </button>
             </form>
           )}
+
         </motion.div>
       </div>
     </div>

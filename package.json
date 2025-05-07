@@ -26,6 +26,7 @@
     "@capacitor/status-bar": "^5.0.7",
     "@ionic/pwa-elements": "^3.2.2",
     "@mapbox/mapbox-gl-geocoder": "^5.0.1",
+    "@supabase/supabase-js": "^2.39.7",
     "axios": "^1.6.7",
     "clsx": "^2.1.0",
     "date-fns": "^3.3.1",

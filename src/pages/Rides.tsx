@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Input from '../components/ui/Input';
 import RideCard from '../components/ride/RideCard';
 import { mockRecentRides } from '../data/mockData';
+import ClientBottomNavigation from '../components/layout/ClientBottomNavigation';
 
 const Rides = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,6 +44,7 @@ const Rides = () => {
           ))}
         </div>
       </div>
+      <ClientBottomNavigation />
     </div>
   );
 };

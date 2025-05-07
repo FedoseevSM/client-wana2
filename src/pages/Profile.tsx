@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Button from '../components/ui/Button';
 import { useAuthStore } from '../stores/authStore';
 import { useToastStore } from '../stores/toastStore';
+import ClientBottomNavigation from '../components/layout/ClientBottomNavigation';
 
 const Profile = () => {
   const { user, logout } = useAuthStore();
@@ -159,10 +160,11 @@ const Profile = () => {
           </Button>
         </motion.div>
       </div>
+      <ClientBottomNavigation />
     </div>
   );
 };
 
 export default Profile;
 
-export { Profile }
+export { Profile };

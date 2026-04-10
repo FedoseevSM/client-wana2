@@ -8,7 +8,7 @@
 - **Карты**: Интерактивная карта Map.tsx компонента
 - **Уведомления**: Toast-система + NotificationBanner
 - **Авторизация**: Login/Register + AdminRoute/ProtectedRoute
-- **State Management**: MobX stores (authStore, rideStore, themeStore)
+- **State Management**: Zustand stores (authStore, rideStore, themeStore)
 - **Supabase**: БД с 2 миграциями (rides, users)
 - **PWA + Capacitor**: Готово к нативной сборке
 
@@ -50,7 +50,7 @@ pnpm dev
 ```
 ├── Framework: React 18 + TypeScript + Vite
 ├── Mobile: Capacitor + PWA Manifest
-├── State: MobX stores
+├── State: Zustand stores
 ├── Styling: Tailwind CSS + cn.ts utility
 ├── Backend: Supabase (Postgres + Auth)
 ├── UI: Custom Button/Input/Toast system
